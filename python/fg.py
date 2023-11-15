@@ -4,7 +4,6 @@ import requests
 import subprocess
 from typing import NamedTuple
 import unittest
-# from datetime import timedelta
 
 def main():
     #  solana epoch-info -ut
@@ -36,7 +35,7 @@ def main():
         # for i in range(0,3):
         #     next_boundary = next_boundary + epoch_length
         #     print("UTC: {}     Local time {}".format(next_boundary, next_boundary.astimezone().isoformat()))
-        epochs = get_next_n_epoch_starts(current_epoch, time_remaining, epoch_duration, 3)
+        epochs = get_next_n_epoch_starts(current_epoch, time_remaining, epoch_duration, 5)
         for e in epochs:
             # print(e[1])
             # print("{} - {} - {} ".format(e[0], e[1].strftime("%a %m/%d, %H:%M"), e[1].astimezone().strftime("%a %m/%d, %H:%M")))
@@ -121,19 +120,6 @@ def get_recent_and_pending(cluster):
     # print(pending_results)
     return activated_results[-3:] + pending_results
     
-class FgTestCase(unittest.TestCase):
-    def setUp(self):
-        pass
-
-    def test_parse_time_string(self):
-        self.assertEqual(parse_time_string("17h 39m 23s"), timedelta(days=0, hours=17, minutes=39, seconds=23))
-        self.assertEqual(parse_time_string("1day 10h 18m 6s"), timedelta(days=1, hours=10, minutes=18, seconds=6))
-        self.assertEqual(parse_time_string("2days 10h 18m 6s"), timedelta(days=2, hours=10, minutes=18, seconds=6))
-        self.assertEqual(parse_time_string("2days 5h 15m"), timedelta(days=2, hours=5, minutes=15, seconds=0))
-        self.assertEqual(parse_time_string("2days 5h 6s"), timedelta(days=2, hours=5, minutes=0, seconds=6))
-        self.assertEqual(parse_time_string("2days 5m 6s"), timedelta(days=2, hours=0, minutes=5, seconds=6))
-
-
 def get_next_feature_gates_by_cluster():
     return_value = {}
     url = "https://github.com/solana-labs/solana/wiki/Feature-Gate-Activation-Schedule.md"
@@ -153,6 +139,7 @@ def get_next_feature_gates_by_cluster():
     return return_value
     
 def parse_row(row_md):
+    print(row_md)
     pattern = re.compile(r"\|(?P<id>[^\|]*)\|(?P<version>[^\|]*)\|(?P<testnet>[^\|]*)\|(?P<devnet>[^\|]*)\|(?P<desc>[^\|]*)\|(?P<owner>[^\|]*)\|")
     desc_pattern = re.compile(r"\[(?P<desc>.*)\]\((?P<link>.*)?\)")
     parsed_row = pattern.search(row_md)
