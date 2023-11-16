@@ -2,8 +2,8 @@
 
 import unittest
 from datetime import datetime, timedelta, timezone
-import fg
-from fg import *
+
+from fg_lib import *
 
 class TestFgTestCase(unittest.TestCase):
     # def setUp(self):
