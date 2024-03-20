@@ -12,18 +12,14 @@ import unittest
 from fg_lib import *
 
 def main():
-    #  solana epoch-info -ut
     cluster_names = {'m': 'mainnet-beta', 't': 'testnet', 'd': 'devnet'}
     clusters = ['m', 'd', 't']
-    # clusters = ['m', 't']
     pattern = re.compile(r'Epoch: (\d*)\\n.*Epoch Completed Time: [^/]*\/([^\(]*) \((.*) remaining\)')
     next_in_schedule = get_next_feature_gates_by_cluster()
     # print(next_in_schedule)
     version_floors = get_version_floor_by_cluster()
     print(version_floors)
 
-    # pattern = re.compile(r'Epoch: (\d*)\\n.*Epoch')
-    parse_time_string("1day 18m 6s")
     for cluster in clusters: 
         epoch_info = subprocess.run(['solana', 'epoch-info', '-u'+ cluster], stdout=subprocess.PIPE)
         # print(str(epoch_info.stdout))
@@ -36,7 +32,8 @@ def main():
         epoch_duration = parse_time_string(match_result.group(2))
         print("Remaining: " + match_result.group(3))
         time_remaining = parse_time_string(match_result.group(3))
-        print('\n'.join(get_recent_and_pending(cluster)))
+        recent_and_pending_activations = get_recent_and_pending(cluster)
+        print('\n'.join(recent_and_pending_activations))
         # next_boundary = datetime.now(timezone.utc) + time_remaining
         # print(next_boundary)
         # for i in range(0,3):
@@ -48,6 +45,9 @@ def main():
         fg = next_in_schedule[cluster]
         if fg is None:
             print("No feature gates scheduled for {cluster}\n".format(cluster=cluster_names[cluster]))
+        elif any(fg.id in activated_feature for activated_feature in recent_and_pending_activations):
+            print("""Top feature gate on the schedule is {key} - {desc}. 
+It has already been activated. Update the wiki and re-run""".format(key=fg.id, desc=fg.desc))
         else:
             print("""
 Thread Name: 
@@ -72,9 +72,6 @@ cc: {owner}
         print("-------------------------------------------------")
 
 # TODO the time delta needs work. and expand {cluster}
-
-
-
 
 main()
 
