@@ -19,7 +19,8 @@ def main():
     pattern = re.compile(r'Epoch: (\d*)\\n.*Epoch Completed Time: [^/]*\/([^\(]*) \((.*) remaining\)')
     next_in_schedule = get_next_feature_gates_by_cluster()
     # print(next_in_schedule)
-
+    version_floors = get_version_floor_by_cluster()
+    print(version_floors)
 
     # pattern = re.compile(r'Epoch: (\d*)\\n.*Epoch')
     parse_time_string("1day 18m 6s")
@@ -43,19 +44,17 @@ def main():
         #     print("UTC: {}     Local time {}".format(next_boundary, next_boundary.astimezone().isoformat()))
         epochs = get_next_n_epoch_starts(current_epoch, time_remaining, epoch_duration, 5)
         for e in epochs:
-            # print(e[1])
-            # print("{} - {} - {} ".format(e[0], e[1].strftime("%a %m/%d, %H:%M"), e[1].astimezone().strftime("%a %m/%d, %H:%M")))
             print("{} - {} UTC".format(e[0], e[1].strftime("%a %m/%d, %H:%M")))
         fg = next_in_schedule[cluster]
         if fg is None:
-            print("No feature gate scheduled for {cluster}".format(cluster=cluster_names[cluster]))
+            print("No feature gates scheduled for {cluster}\n".format(cluster=cluster_names[cluster]))
         else:
             print("""
 Thread Name: 
 {key} - {desc}
 First Message:
 `{key} - {desc}` is next up for activation on {cluster}
-{link}
+{link}. It requires at least version {version}
 
 Epoch {epoch} starts in {time_delta}
 
@@ -66,6 +65,7 @@ cc: {owner}
            ,desc=fg.desc
            ,cluster=cluster_names[cluster]
            ,link=fg.issue_link
+           ,version=fg.version
            ,owner=fg.owner
            ,epoch=epochs[0][0]
            ,time_delta=time_remaining))

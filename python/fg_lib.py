@@ -13,6 +13,7 @@ class FeatureGate(NamedTuple):
     issue_link: str
     owner: str
 
+schedule_md = None
 
 def get_next_n_epoch_starts(current_epoch, time_remaining, epoch_duration, n):
     '''Return an array of tuples (epoch #, datetime) of future epoch starts'''
@@ -69,15 +70,37 @@ def get_recent_and_pending(cluster):
     # print(activated_results)
     # print(pending_results)
     return activated_results[-3:] + pending_results
-    
+
+def get_schedule_md():
+    global schedule_md
+    if schedule_md is None:
+        print("Fetching md")
+        url = "https://github.com/solana-labs/solana/wiki/Feature-Gate-Activation-Schedule.md"
+        schedule_md = requests.get(url)    
+    return schedule_md
+
+def get_version_floor_by_cluster():
+    return_value = {}
+    schedule = get_schedule_md()
+    find_row = re.compile(r"Version Floor.*Current floor([^\n]*)", flags=re.DOTALL)
+    version_floor_row = find_row.search(schedule.text)
+    print(version_floor_row)
+    parse_row = re.compile(r"\|\s*(?P<t>[^\s\|]+)\s*\|\s*(?P<d>[^\s\|]+)\s*\|\s*(?P<m>[^\s\|]+)\s*")
+    versions = parse_row.search(version_floor_row.group(1))
+    print(versions)
+    return_value['t'] = versions.group('t')
+    return_value['d'] = versions.group('d')
+    return_value['m'] = versions.group('m')
+    print(return_value)
+    return return_value
+
 def get_next_feature_gates_by_cluster():
     return_value = {}
-    url = "https://github.com/solana-labs/solana/wiki/Feature-Gate-Activation-Schedule.md"
-    schedule_md = requests.get(url)
+    schedule = get_schedule_md()
 
     pattern = re.compile(r"Current Schedule.*?Pending Mainnet Beta activation(?P<m>.*)Pending Devnet Activation(?P<d>.*)Pending Testnet Activation(?P<t>.*)Features are BLOCKED", flags=re.DOTALL)
     first_row = re.compile(r"-----.*?\n(.*?)\n", flags=re.DOTALL)
-    matches = pattern.search(schedule_md.text)
+    matches = pattern.search(schedule.text)
     clusters = ['m', 'd', 't']
     for c in clusters:
         table = matches.group(c)
