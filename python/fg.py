@@ -46,7 +46,7 @@ def main():
         if fg is None:
             print("No feature gates scheduled for {cluster}\n".format(cluster=cluster_names[cluster]))
         elif any(fg.id in activated_feature for activated_feature in recent_and_pending_activations):
-            print("""Top feature gate on the schedule is {key} - {desc}. 
+            print("""Top feature gate on the schedule is {key} - {desc}.
 It has already been activated. Update the wiki and re-run""".format(key=fg.id, desc=fg.desc))
         else:
             print("""

@@ -55,16 +55,16 @@ def parse_time_string(input):
 
 def get_recent_and_pending(cluster):
     status = subprocess.run(['solana', 'feature', 'status', '-u'+ cluster, '--display-all'], stdout=subprocess.PIPE)
-    # status_text = str(status.stdout).replace(r'\n', '\n')
-    status_text = '''9gxu85LYRAcZL38We8MYJ4A9AwgBBPtVBAqebMcT1241 | active since epoch 489  | 205724256       | cap accounts data allocations per transaction #27375
-A16q37opZdQMCbe5qJ6xpBB9usykfv8jZaMkxvZQi4GJ | active since epoch 490  | 206156264       | add alt_bn128 syscalls #27961
-8Zs9W7D9MpSEtUWSQdGniZk2cNmV22y6FLJwCx53asme | active since epoch 492  | 207020260       | enable bpf upgradeable loader ExtendProgram instruction #25234
-SVn36yVApPLYsa8koK3qUcy14zXDnqkNYWyUh1f4oK1  | pending until epoch 493 | NA              | ignore slot when calculating an account hash #28420
-SVn36yVApPLYsa8koK3qUcy14zXDnqkNYWyUh1f4oK1  | pending until epoch xyz | NA              | ignore slot when calculating an account hash #28420
-6YsBCejwK96GZCkJ6mkZ4b68oP63z2PLoQmWjC7ggTqZ | pending until epoch 123                | NA              | consume duplicate proofs from blockstore in consensus #34372
-16FMCmgLzCNNz6eTwGanbyN2ZxvTBSLuQ6DZhgeMshg  | inactive                | NA              | Stop truncating strings in syscalls #31029
-25vqsfjk7Nv1prsQJmA4Xu1bN61s8LXCBGUPp8Rfy1UF | inactive                | NA              | only hash accounts in incremental snapshot during incremental snapshot creation #26799
-'''
+    status_text = str(status.stdout).replace(r'\n', '\n')
+#     status_text = '''9gxu85LYRAcZL38We8MYJ4A9AwgBBPtVBAqebMcT1241 | active since epoch 489  | 205724256       | cap accounts data allocations per transaction #27375
+# A16q37opZdQMCbe5qJ6xpBB9usykfv8jZaMkxvZQi4GJ | active since epoch 490  | 206156264       | add alt_bn128 syscalls #27961
+# 8Zs9W7D9MpSEtUWSQdGniZk2cNmV22y6FLJwCx53asme | active since epoch 492  | 207020260       | enable bpf upgradeable loader ExtendProgram instruction #25234
+# SVn36yVApPLYsa8koK3qUcy14zXDnqkNYWyUh1f4oK1  | pending until epoch 493 | NA              | ignore slot when calculating an account hash #28420
+# SVn36yVApPLYsa8koK3qUcy14zXDnqkNYWyUh1f4oK1  | pending until epoch xyz | NA              | ignore slot when calculating an account hash #28420
+# 6YsBCejwK96GZCkJ6mkZ4b68oP63z2PLoQmWjC7ggTqZ | pending until epoch 123                | NA              | consume duplicate proofs from blockstore in consensus #34372
+# 16FMCmgLzCNNz6eTwGanbyN2ZxvTBSLuQ6DZhgeMshg  | inactive                | NA              | Stop truncating strings in syscalls #31029
+# 25vqsfjk7Nv1prsQJmA4Xu1bN61s8LXCBGUPp8Rfy1UF | inactive                | NA              | only hash accounts in incremental snapshot during incremental snapshot creation #26799
+# '''
     most_recent_activated_pattern = re.compile(r'(.*active since epoch.*)')
     pending_pattern = re.compile(r'(.*pending until epoch.*)')
     activated_results = most_recent_activated_pattern.findall(status_text)
