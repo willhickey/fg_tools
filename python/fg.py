@@ -28,6 +28,7 @@ def main():
         current_epoch = int(match_result.group(1))
         print("Cluster: " + cluster_names[cluster])
         print("Current epoch: " + str(current_epoch))
+        print("Version floor: " + version_floors[cluster])
         print("Epoch length: " + match_result.group(2))
         epoch_duration = parse_time_string(match_result.group(2))
         print("Remaining: " + match_result.group(3))
