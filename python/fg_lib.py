@@ -13,6 +13,11 @@ class FeatureGate(NamedTuple):
     issue_link: str
     owner: str
 
+class SemVer(NamedTuple):
+    major: int
+    minor: int
+    patch: int
+
 schedule_md = None
 
 def get_next_n_epoch_starts(current_epoch, time_remaining, epoch_duration, n):
@@ -86,14 +91,14 @@ def get_version_floor_by_cluster():
     schedule = get_schedule_md()
     find_row = re.compile(r"Version Floor.*Current floor([^\n]*)", flags=re.DOTALL)
     version_floor_row = find_row.search(schedule.text)
-    print(version_floor_row)
+    # print(version_floor_row)
     parse_row = re.compile(r"\|\s*(?P<t>[^\s\|]+)\s*\|\s*(?P<d>[^\s\|]+)\s*\|\s*(?P<m>[^\s\|]+)\s*")
     versions = parse_row.search(version_floor_row.group(1))
-    print(versions)
+    # print(versions)
     return_value['t'] = versions.group('t')
     return_value['d'] = versions.group('d')
     return_value['m'] = versions.group('m')
-    print(return_value)
+    # print(return_value)
     return return_value
 
 def get_next_feature_gates_by_cluster():
@@ -129,3 +134,25 @@ def parse_row(row_md):
                          ,parsed_desc.group('link').strip()
                          ,parsed_row.group('owner').strip())
     return result
+
+#compare two semver
+# version1  < version2 -> -1
+# version1 == version2 ->  0
+# version1  > version2 ->  1
+def semver_compare(version1: SemVer, version2: SemVer):
+    for v1, v2 in zip(version1, version2):
+        if v1 < v2:
+            return -1
+        elif v2 < v1:
+            return 1
+    return 0
+
+# Parse major.minor.patch from semver string. split on . and remove the V or v
+def parse_semver(version):
+    tokens = version.split(".")
+    if len(tokens) != 3:
+        raise ValueError("Error parsing semver: {}".format(version))
+    try:
+        return SemVer(int(tokens[0].replace("v", "").replace("V", "")), int(tokens[1]), int(tokens[2]))
+    except:
+        raise ValueError("Error parsing semver: {}".format(version))
