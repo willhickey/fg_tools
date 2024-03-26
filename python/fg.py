@@ -50,10 +50,14 @@ def main():
         if fg is None:
             print("No feature gates scheduled for {cluster}\n".format(cluster=cluster_names[cluster]))
         elif any(fg.id in activated_feature for activated_feature in recent_and_pending_activations):
-            print("""Top feature gate on the schedule is {key} - {desc}. It has already been activated. Update the wiki and re-run.\n"""
+            print("""Top feature gate on the schedule is {key} - {desc}.
+It has already been activated. Update the wiki and re-run.
+https://github.com/anza-xyz/agave/wiki/Feature-Gate-Activation-Schedule"""
                   .format(key=fg.id, desc=fg.desc))
         elif version_floor_needs_to_be_raised:
-            print("""Top feature gate on the schedule is {key} - {desc}. It will raise the version floor from {cluster_version} to {fg_version}. Update the wiki version floor and re-run.\n"""
+            print("""Top feature gate on the schedule is {key} - {desc}.
+It will raise the version floor from {cluster_version} to {fg_version}. Update the wiki version floor and re-run.
+https://github.com/anza-xyz/agave/wiki/Feature-Gate-Activation-Schedule"""
                    .format(key=fg.id, desc=fg.desc, cluster_version=version_floors[cluster], fg_version=fg.version))
         else:
             print("""

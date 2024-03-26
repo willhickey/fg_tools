@@ -81,8 +81,8 @@ def get_recent_and_pending(cluster):
 def get_schedule_md():
     global schedule_md
     if schedule_md is None:
-        print("Fetching md")
         url = "https://github.com/anza-xyz/agave/wiki/Feature-Gate-Activation-Schedule.md"
+        print("Fetching: {}".format(url))
         schedule_md = requests.get(url)    
     return schedule_md
 
