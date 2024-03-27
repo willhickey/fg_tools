@@ -39,17 +39,22 @@ def main():
         for e in epochs:
             print("{} - {} UTC".format(e[0], e[1].strftime("%a %m/%d, %H:%M")))
         fg = next_in_schedule[cluster]
+
+        if fg is None:
+            print("No feature gates scheduled for {cluster}\n".format(cluster=cluster_names[cluster]))
+            print("-----------------------------------------------------------")
+
+            continue
+
         parsed_fg_version = parse_semver(fg.version)
         parsed_cluster_version_floor = parse_semver(version_floors[cluster])
         version_floor_needs_to_be_raised = semver_compare(parsed_fg_version, parsed_cluster_version_floor) > 0
 
-        print("parsed_fg_version: {}".format(parsed_fg_version))
-        print("parsed_cluster_version_floor: {}".format(parsed_cluster_version_floor))
-        print("version_floor_needs_to_be_raised: {}".format(version_floor_needs_to_be_raised))
+        # print("parsed_fg_version: {}".format(parsed_fg_version))
+        # print("parsed_cluster_version_floor: {}".format(parsed_cluster_version_floor))
+        # print("version_floor_needs_to_be_raised: {}".format(version_floor_needs_to_be_raised))
 
-        if fg is None:
-            print("No feature gates scheduled for {cluster}\n".format(cluster=cluster_names[cluster]))
-        elif any(fg.id in activated_feature for activated_feature in recent_and_pending_activations):
+        if any(fg.id in activated_feature for activated_feature in recent_and_pending_activations):
             print("""Top feature gate on the schedule is {key} - {desc}.
 It has already been activated. Update the wiki and re-run.
 https://github.com/anza-xyz/agave/wiki/Feature-Gate-Activation-Schedule"""
