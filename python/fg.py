@@ -1,6 +1,7 @@
 ### TODO
 # compare cluster min versions against the next few fg versions
 # parallelize
+# TODO the output needs to show if a FG is blocked. This will require switching from the public json schedule to a private one, since we don't publish the blocked status.
 
 from datetime import datetime, timedelta, timezone
 import re
@@ -20,7 +21,7 @@ def main():
     print("Version floors: {}".format(version_floors))
 
     print("-----------------------------------------------------------")
-    for cluster in clusters: 
+    for cluster in clusters:
         epoch_info = subprocess.run(['solana', 'epoch-info', '-u'+ cluster], stdout=subprocess.PIPE)
         # print(str(epoch_info.stdout))
         match_result = pattern.search(str(epoch_info.stdout))
@@ -46,43 +47,63 @@ def main():
 
             continue
 
-        parsed_fg_version = parse_semver(fg.version)
-        parsed_cluster_version_floor = parse_semver(version_floors[cluster])
-        version_floor_needs_to_be_raised = semver_compare(parsed_fg_version, parsed_cluster_version_floor) > 0
+        # cluster:
+        # 2.2.6
+
+        # this:
+        # 2.2.4, 2.1.21       OK
+        # 2.2.7, 2.1.21       need to raise
+        # cluster version floor should be:
+        # client:
+        #     list:
+
+        # Your version must be >= any of the versions in the list
+        # A FG raises the version floor by:
+        #     match up lists by major.minor
+        #         Remove any floor versions that don't have corresponding FG mins
+        #         For all that match do floor = major.min.max(patch, patch)
+
+# commenting until I get verison floors sorted out
+        # parsed_fg_version = parse_semver(fg.version) # ",".join(fg["Min Agave Versions"])
+        # parsed_cluster_version_floor = parse_semver(version_floors[cluster])
+        # version_floor_needs_to_be_raised = semver_compare(parsed_fg_version, parsed_cluster_version_floor) > 0
 
         # print("parsed_fg_version: {}".format(parsed_fg_version))
         # print("parsed_cluster_version_floor: {}".format(parsed_cluster_version_floor))
         # print("version_floor_needs_to_be_raised: {}".format(version_floor_needs_to_be_raised))
 
-        if any(fg.id in activated_feature for activated_feature in recent_and_pending_activations):
+        if any(fg["Feature ID"] in activated_feature for activated_feature in recent_and_pending_activations):
             print("""Top feature gate on the schedule is {key} - {desc}.
 It has already been activated. Update the wiki and re-run.
 https://github.com/anza-xyz/agave/wiki/Feature-Gate-Activation-Schedule"""
-                  .format(key=fg.id, desc=fg.desc))
-        elif version_floor_needs_to_be_raised:
-            print("""Top feature gate on the schedule is {key} - {desc}.
-It will raise the version floor from {cluster_version} to {fg_version}. Update the wiki version floor and re-run.
-https://github.com/anza-xyz/agave/wiki/Feature-Gate-Activation-Schedule"""
-                   .format(key=fg.id, desc=fg.desc, cluster_version=version_floors[cluster], fg_version=fg.version))
+                  .format(key=fg["Feature ID"], desc=fg["Title"]))
+#         elif version_floor_needs_to_be_raised:
+#             print("""Top feature gate on the schedule is {key} - {desc}.
+# It will raise the version floor from {cluster_version} to {fg_version}. Update the wiki version floor and re-run.
+# https://github.com/anza-xyz/agave/wiki/Feature-Gate-Activation-Schedule"""
+#                    .format(key=fg["Feature ID"], desc=fg["Title"], cluster_version=version_floors[cluster], fg_version=",".join(fg["Min Agave Versions"])))
         else:
+            print("message for {key}".format(key=fg["Feature ID"]))
+
             print("""
-Thread Name: 
+Thread Name:
 {key} - {desc}
 First Message:
-`{key} - {desc}` is next up for activation on {cluster}
-{link}. It requires at least version {version}
+`{key} - {desc}` is next up for activation on {cluster}.
+It requires at least Agave version {agave_version}
 
 Epoch {epoch} starts in {time_delta}
 
 Any objection to this feature gate being activated?
 
 cc: {owner}
-""".format(key=fg.id
-           ,desc=fg.desc
+""".format(key=fg["Feature ID"]
+           ,desc=fg["Title"]
            ,cluster=cluster_names[cluster]
-           ,link=fg.issue_link
-           ,version=fg.version
-           ,owner=fg.owner
+        #    ,link=fg.issue_link
+           # TODO other versions
+           ,agave_version=",".join(fg["Min Agave Versions"])
+           ,owner=",".join(fg["Owners"])
            ,epoch=epochs[0][0]
            ,time_delta=time_remaining))
         print("-----------------------------------------------------------")

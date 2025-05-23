@@ -17,18 +17,18 @@ class TestFgTestCase(unittest.TestCase):
         self.assertEqual(parse_time_string("2days 5h 15m"), timedelta(days=2, hours=5, minutes=15, seconds=0))
         self.assertEqual(parse_time_string("2days 5h 6s"), timedelta(days=2, hours=5, minutes=0, seconds=6))
         self.assertEqual(parse_time_string("2days 5m 6s"), timedelta(days=2, hours=0, minutes=5, seconds=6))
-    
+
     def test_parse_row(self):
-        self.assertEqual(parse_row(r"| DdLwVYuvDz26JohmgSbA7mjpJFgX5zP2dkp8qsF2C33V | v1.16.0 | 497 | 557 | [Limit loaded data per transaction to a fixed cap](https://github.com/solana-labs/solana/issues/27839) | @taozhu-chicago | |"), 
+        self.assertEqual(parse_row(r"| DdLwVYuvDz26JohmgSbA7mjpJFgX5zP2dkp8qsF2C33V | v1.16.0 | 497 | 557 | [Limit loaded data per transaction to a fixed cap](https://github.com/solana-labs/solana/issues/27839) | @taozhu-chicago | |"),
                          FeatureGate("DdLwVYuvDz26JohmgSbA7mjpJFgX5zP2dkp8qsF2C33V", "v1.16.0", "497", "557", "Limit loaded data per transaction to a fixed cap", "https://github.com/solana-labs/solana/issues/27839", "@taozhu-chicago"))
-    
-    def test_parse_sember(self):
+
+    def test_parse_semver(self):
         self.assertEqual(parse_semver("v1.2.3"), (1,2,3))
         self.assertEqual(parse_semver("v0.12.30"), (0, 12, 30))
         self.assertEqual(parse_semver("v2.3.02"), (2, 3, 2))
         self.assertEqual(parse_semver("v1.12.23"), (1, 12, 23))
         self.assertEqual(parse_semver("v10.20.30"), (10, 20, 30))
-        
+
         self.assertEqual(parse_semver("V1.2.3"), (1,2,3))
 
         self.assertEqual(parse_semver("0.2.3"), (0,2,3))

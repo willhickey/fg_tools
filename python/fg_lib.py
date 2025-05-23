@@ -1,4 +1,5 @@
 from datetime import datetime, timedelta, timezone
+import json
 import re
 import requests
 import subprocess
@@ -19,6 +20,7 @@ class SemVer(NamedTuple):
     patch: int
 
 schedule_md = None
+schedule_json = None
 
 def get_next_n_epoch_starts(current_epoch, time_remaining, epoch_duration, n):
     '''Return an array of tuples (epoch #, datetime) of future epoch starts'''
@@ -26,7 +28,7 @@ def get_next_n_epoch_starts(current_epoch, time_remaining, epoch_duration, n):
     result = []
     if n < 1 or n > 100:
         return result
-    
+
     next_epoch = current_epoch + 1
     next_boundary = datetime.now(timezone.utc) + time_remaining
     result.append((next_epoch, next_boundary))
@@ -78,12 +80,13 @@ def get_recent_and_pending(cluster):
     # print(pending_results)
     return activated_results[-3:] + pending_results
 
+# We only need this for version floors now. Those should be moved somewhere else in due course.
 def get_schedule_md():
     global schedule_md
     if schedule_md is None:
-        url = "https://github.com/anza-xyz/agave/wiki/Feature-Gate-Activation-Schedule.md"
+        url = "https://github.com/anza-xyz/agave/wiki/Feature-Gate-Tracker-Schedule.md"
         print("Fetching: {}".format(url))
-        schedule_md = requests.get(url)    
+        schedule_md = requests.get(url)
     return schedule_md
 
 def get_version_floor_by_cluster():
@@ -92,8 +95,8 @@ def get_version_floor_by_cluster():
     find_row = re.compile(r"Version Floor.*Current floor([^\n]*)", flags=re.DOTALL)
     version_floor_row = find_row.search(schedule.text)
     # print(version_floor_row)
-    parse_row = re.compile(r"\|\s*(?P<t>[^\s\|]+)\s*\|\s*(?P<d>[^\s\|]+)\s*\|\s*(?P<m>[^\s\|]+)\s*")
-    versions = parse_row.search(version_floor_row.group(1))
+    parse_version_floor_row = re.compile(r"\|\s*(?P<t>[^\s\|]+)\s*\|\s*(?P<d>[^\s\|]+)\s*\|\s*(?P<m>[^\s\|]+)\s*")
+    versions = parse_version_floor_row.search(version_floor_row.group(1))
     # print(versions)
     return_value['t'] = versions.group('t')
     return_value['d'] = versions.group('d')
@@ -101,39 +104,50 @@ def get_version_floor_by_cluster():
     # print(return_value)
     return return_value
 
+def get_json_schedule():
+    global schedule_json
+    if schedule_json is None:
+        url = "https://github.com/anza-xyz/agave/wiki/feature-gate-tracker-schedule.json"
+        print("Fetching: {}".format(url))
+        schedule_json = requests.get(url)
+    schedule = json.loads(schedule_json.text)
+    return schedule
+
 def get_next_feature_gates_by_cluster():
     return_value = {}
-    schedule = get_schedule_md()
-
-    pattern = re.compile(r"Current Schedule.*?Pending Mainnet Beta activation(?P<m>.*)Pending Devnet Activation(?P<d>.*)Pending Testnet Activation(?P<t>.*)Features are BLOCKED", flags=re.DOTALL)
-    first_row = re.compile(r"-----.*?\n(.*?)\n", flags=re.DOTALL)
-    matches = pattern.search(schedule.text)
-    clusters = ['m', 'd', 't']
+    schedule = get_json_schedule()
+    clusters = {'m': "3 - Ready for Mainnet-beta", 'd': "2 - Ready for Devnet", 't': "3 - Ready for Testnet"}
     for c in clusters:
-        table = matches.group(c)
-        row = first_row.search(table)
-        parsed_row = parse_row(row.group(1))
-        return_value[c] = parsed_row
+        if clusters[c] not in schedule:
+            # This cluster's schedule is empty
+            return_value[c] = None
+            continue
+
+        fgs_for_this_cluster = schedule[clusters[c]]
+        # This filter removes feature gates that haven't been explicitly scheduled. Usually unscheduled FGs don't make it
+        # to the top of the queue, but this filter makes sure we don't activate one by accident.
+        scheduled_fgs_for_this_cluster = list(filter(is_scheduled, fgs_for_this_cluster))
+
+        if len(scheduled_fgs_for_this_cluster) == 0:
+            return_value[c] = None
+            continue
+
+        sorted_fgs_for_this_cluster = sorted(scheduled_fgs_for_this_cluster, key=lambda fg: (fg["Testnet Epoch"], fg["Planned Testnet Order"]))
+        return_value[c] = sorted_fgs_for_this_cluster[0]
 
     return return_value
-    
-def parse_row(row_md):
-    pattern = re.compile(r"\|(?P<id>[^\|]*)\|(?P<version>[^\|]*)\|(?P<testnet>[^\|]*)\|(?P<devnet>[^\|]*)\|(?P<desc>[^\|]*)\|(?P<owner>[^\|]*)\|")
-    desc_pattern = re.compile(r"\[(?P<desc>.*)\]\((?P<link>.*)?\)")
-    parsed_row = pattern.search(row_md)
-    if parsed_row is None:
-        return None
-    description = parsed_row.group('desc')
-    parsed_desc = desc_pattern.search(description)
 
-    result = FeatureGate(parsed_row.group('id').strip()
-                         ,parsed_row.group('version').strip()
-                         ,parsed_row.group('testnet').strip()
-                         ,parsed_row.group('devnet').strip()
-                         ,parsed_desc.group('desc').strip()
-                         ,parsed_desc.group('link').strip()
-                         ,parsed_row.group('owner').strip())
-    return result
+
+def is_scheduled(fg):
+    """
+    Check if this FG is scheduled:
+    - Testnet FGs require "Planned Testnet Order" to be populated
+    - Devnet and mainnet-beta FGs require "Testnet Epoch" to be populated
+    """
+    if fg["Status"] == "3 - Ready for Testnet":
+        return isinstance(fg["Planned Testnet Order"], int)
+    else:
+        return isinstance(fg["Testnet Epoch"], int)
 
 #compare two semver
 # version1  < version2 -> -1
