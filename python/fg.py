@@ -1,7 +1,24 @@
-### TODO
-# compare cluster min versions against the next few fg versions
-# parallelize
+# TODO parallelize everything
 # TODO the output needs to show if a FG is blocked. This will require switching from the public json schedule to a private one, since we don't publish the blocked status.
+
+# TODO handle version floors:
+# compare cluster min versions against the next few fg versions
+        # cluster:
+        # Agave: 2.2.6. We currently list just one version, but it should support multiple versions like "v2.1.21 & v2.2.10"
+
+        # Example Feature gate:
+        # 2.2.4, 2.1.21       OK
+        # 2.2.7, 2.1.21       need to raise the version floor
+        # cluster version floor should be:
+        # client:
+        #     list:
+
+        # Your version must be >= any of the versions in the list
+        # A FG raises the version floor by:
+        #     match up lists by major.minor
+        #         Remove any floor versions that don't have corresponding FG mins
+        #         For all that match do floor = major.min.max(patch, patch)
+
 
 from datetime import datetime, timedelta, timezone
 import re
@@ -47,23 +64,8 @@ def main():
 
             continue
 
-        # cluster:
-        # 2.2.6
 
-        # this:
-        # 2.2.4, 2.1.21       OK
-        # 2.2.7, 2.1.21       need to raise
-        # cluster version floor should be:
-        # client:
-        #     list:
-
-        # Your version must be >= any of the versions in the list
-        # A FG raises the version floor by:
-        #     match up lists by major.minor
-        #         Remove any floor versions that don't have corresponding FG mins
-        #         For all that match do floor = major.min.max(patch, patch)
-
-# commenting until I get verison floors sorted out
+# commenting the version floor logic until I get this supporting multilpe clients and versions.
         # parsed_fg_version = parse_semver(fg.version) # ",".join(fg["Min Agave Versions"])
         # parsed_cluster_version_floor = parse_semver(version_floors[cluster])
         # version_floor_needs_to_be_raised = semver_compare(parsed_fg_version, parsed_cluster_version_floor) > 0
