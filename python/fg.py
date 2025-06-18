@@ -76,8 +76,7 @@ def main():
 
         if any(fg["Feature ID"] in activated_feature for activated_feature in recent_and_pending_activations):
             print("""Top feature gate on the schedule is {key} - {desc}.
-It has already been activated. Update the wiki and re-run.
-https://github.com/anza-xyz/agave/wiki/Feature-Gate-Activation-Schedule"""
+It has already been activated. Update the wiki json and re-run."""
                   .format(key=fg["Feature ID"], desc=fg["Title"]))
 #         elif version_floor_needs_to_be_raised:
 #             print("""Top feature gate on the schedule is {key} - {desc}.

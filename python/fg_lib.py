@@ -116,10 +116,12 @@ def get_json_schedule():
 def get_next_feature_gates_by_cluster():
     return_value = {}
     schedule = get_json_schedule()
-    clusters = {'m': "3 - Ready for Mainnet-beta", 'd': "2 - Ready for Devnet", 't': "3 - Ready for Testnet"}
+    clusters = {'m': "1 - Ready for Mainnet-beta", 'd': "2 - Ready for Devnet", 't': "3 - Ready for Testnet"}
     for c in clusters:
+        print("Checking FGs for cluster: {}".format(c))
         if clusters[c] not in schedule:
             # This cluster's schedule is empty
+            print("Schedule is empty")
             return_value[c] = None
             continue
 
@@ -129,6 +131,7 @@ def get_next_feature_gates_by_cluster():
         scheduled_fgs_for_this_cluster = list(filter(is_scheduled, fgs_for_this_cluster))
 
         if len(scheduled_fgs_for_this_cluster) == 0:
+            print("Schedule is empty after filtering")
             return_value[c] = None
             continue
 
